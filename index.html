@@ -179,17 +179,20 @@ async function submitForm() {
 
   phone = normalizePhone(phone);
 
-  const res = await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      name,
-      phone,
-      service,
-      master,
-      date,
-      time: selectedTime
-    })
-  });
+ const res = await fetch(API_URL, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    name,
+    phone,
+    service,
+    master,
+    date,
+    time: selectedTime
+  })
+});
 
   const text = await res.text();
 
