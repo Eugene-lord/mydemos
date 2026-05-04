@@ -3,209 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Beauty Studio</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter&display=swap" rel="stylesheet">
+<title>Запись в салон</title>
 
 <style>
 body {
-  margin: 0;
-  background: linear-gradient(180deg, #1a1a1d, #111);
-  font-family: 'Inter', sans-serif;
-  color: white;
-}
-
-.container {
-  max-width: 420px;
-  margin: auto;
-  padding: 20px;
+  font-family: Arial;
+  background: #fff;
+  text-align: center;
+  padding: 30px;
 }
 
 h1 {
-  font-family: 'Playfair Display', serif;
-  text-align: center;
-  margin-bottom: 25px;
+  color: #ff4da6;
 }
 
-.card {
-  background: #1f1f23;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+form {
+  max-width: 300px;
+  margin: auto;
 }
 
-input, select {
+input, button {
   width: 100%;
-  padding: 14px;
-  margin-top: 10px;
-  border-radius: 12px;
-  border: none;
-  background: #2a2a2e;
-  color: white;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
 }
 
 button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 20px;
-  border-radius: 14px;
+  background: #ff4da6;
+  color: white;
   border: none;
-  background: linear-gradient(45deg, #ff4d8d, #ff9a9e);
   font-size: 16px;
-}
-
-.slots {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.slot {
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #2a2a2e;
-  cursor: pointer;
-}
-
-.slot.booked {
-  opacity: 0.3;
-}
-
-.slot.selected {
-  background: #ff4d8d;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-  <h1>Beauty Studio</h1>
+<h1>Запись в салон</h1>
 
-  <div class="card">
-    <input id="name" placeholder="Ваше имя">
-
-    <input id="phone" placeholder="+7 или 8">
-
-    <select id="service">
-      <option>Маникюр</option>
-      <option>Стрижка</option>
-      <option>Окрашивание</option>
-    </select>
-
-    <select id="master">
-      <option>Анна</option>
-      <option>Мария</option>
-    </select>
-
-    <input type="date" id="date">
-
-    <div class="slots" id="slots"></div>
-
-    <button onclick="submitForm()">Записаться</button>
-  </div>
-</div>
+<form id="form">
+  <input type="text" name="name" placeholder="Имя" required>
+  <input type="tel" name="phone" placeholder="Телефон" required>
+  <input type="date" name="date" required>
+  <input type="time" name="time" required>
+  <button type="submit">Записаться</button>
+</form>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxcmn6Ea1maLHvWBNyQDWp4Y-qSEd6LhFSCXJp3drUi9wvMcNZ7upx202P8wnUAvLZVww/exec";
+const scriptURL = "https://script.google.com/macros/s/AKfycbyWzfusaSQOV-S8Zdc5XdjQBEMfbQKyoS6oRzWPlLon84o7eJ3BJitqGzSGw1UeiRlUxA/exec";
 
-let selectedTime = null;
-let booked = [];
+document.getElementById("form").add-EventListener("submit", function(e) {
+  e.preventDefault();
 
-function normalizePhone(phone) {
-  let digits = phone.replace(/\D/g, "");
+  const formData = new FormData(this);
 
-  if (digits.startsWith("8")) digits = "7" + digits.slice(1);
-  if (digits.length === 10) digits = "7" + digits;
-
-  return "+" + digits;
-}
-
-async function loadData() {
-  const res = await fetch(API_URL);
-  booked = await res.json();
-}
-
-function renderSlots() {
-  const date = document.getElementById("date").value;
-  const master = document.getElementById("master").value;
-
-  const container = document.getElementById("slots");
-  container.innerHTML = "";
-
-  for (let h = 10; h <= 20; h++) {
-    let time = h + ":00";
-
-    let isBusy = booked.some(b =>
-      b.date === date &&
-      b.time === time &&
-      b.master === master
-    );
-
-    const div = document.createElement("div");
-    div.className = "slot";
-    div.innerText = time;
-
-    if (isBusy) div.classList.add("booked");
-
-    div.onclick = () => {
-      if (isBusy) return;
-
-      document.querySelectorAll(".slot").forEach(s => s.classList.remove("selected"));
-      div.classList.add("selected");
-      selectedTime = time;
-    };
-
-    container.appendChild(div);
-  }
-}
-
-document.getElementById("date").onchange = renderSlots;
-document.getElementById("master").onchange = renderSlots;
-
-async function submitForm() {
-  const name = document.getElementById("name").value;
-  let phone = document.getElementById("phone").value;
-  const service = document.getElementById("service").value;
-  const master = document.getElementById("master").value;
-  const date = document.getElementById("date").value;
-
-  if (!name || !phone || !date || !selectedTime) {
-    alert("Заполни всё");
-    return;
-  }
-
-  phone = normalizePhone(phone);
-
- const res = await fetch(API_URL, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    name,
-    phone,
-    service,
-    master,
-    date,
-    time: selectedTime
+  fetch(scriptURL, {
+    method: "POST",
+    body: formData
   })
+  .then(res => res.text())
+  .then(data => {
+    alert("Запись отправлена!");
+    document.getElementById("form").reset();
+  })
+  .catch(err => alert("Ошибка: " + err));
 });
-
-  const text = await res.text();
-
-  if (text === "busy") {
-    alert("Это время уже занято");
-    return;
-  }
-
-  alert("Вы записаны 💅 ");
-  location.reload();
-}
-
-loadData();
 </script>
 
 </body>
